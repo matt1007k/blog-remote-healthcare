@@ -1,0 +1,27 @@
+---
+/**
+ * RelatedPosts.astro — Renderiza exactamente los posts del caso de uso.
+ * La lógica vive en GetRelatedPostsUseCase; aquí solo presentación.
+ */
+import PostCard from './PostCard.astro';
+import type { BlogPost } from '../../core/domain/entities';
+
+interface Props {
+  posts: readonly BlogPost[];
+  title?: string;
+}
+
+const { posts, title = 'Sigue cuidando tu postura' } = Astro.props as Props;
+---
+
+{posts.length > 0 && (
+  <aside aria-labelledby="related-heading" class="mt-14 border-t border-eucalyptus-900/10 pt-8 dark:border-white/10">
+    <h2 id="related-heading" class="font-display text-2xl text-ink-900 dark:text-sand-50">{title}</h2>
+    <p class="mt-1 text-sm text-eucalyptus-900/60 dark:text-eucalyptus-100/60">
+      Recomendados por coincidencia de categoría y etiquetas.
+    </p>
+    <div class="mt-6 grid gap-6 sm:grid-cols-2">
+      {posts.map((post: BlogPost) => <PostCard post={post} />)}
+    </div>
+  </aside>
+)}

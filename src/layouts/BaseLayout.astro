@@ -1,0 +1,77 @@
+---
+/**
+ * BaseLayout.astro — Layout base con SEO + OpenGraph + theme bootstrap.
+ */
+import '../styles/global.css';
+import ThemeToggle from '../components/common/ThemeToggle.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+  canonicalPath?: string;
+}
+
+const { title, description, ogImage = '/og-default.png', canonicalPath = '/' } = Astro.props as Props;
+const site: string = Astro.site?.toString() ?? 'https://ergonomia-ejemplo.dev';
+const canonical: string = new URL(canonicalPath, site).toString();
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#3f6f5d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script is:inline>
+      // Evita FOUC del tema: clase .dark antes del primer paint.
+      try {
+        const saved = localStorage.getItem('theme');
+        const prefersDark = matchMedia('(prefers-color-scheme: dark)').matches;
+        if (saved === 'dark' || (!saved && prefersDark)) document.documentElement.classList.add('dark');
+      } catch {}
+    </script>
+  </head>
+  <body class="min-h-screen bg-sand-100 text-ink-900 antialiased dark:bg-eucalyptus-950 dark:text-sand-50">
+    <a href="#contenido" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
+      Saltar al contenido
+    </a>
+    <header class="sticky top-0 z-40 border-b border-eucalyptus-900/10 bg-sand-50/85 backdrop-blur dark:border-white/10 dark:bg-eucalyptus-950/85">
+      <nav aria-label="Principal" class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <a href="/" class="font-display text-lg font-semibold" aria-label="Inicio — Postura & Teletrabajo">
+          🪴 Postura <span class="text-eucalyptus-600 dark:text-eucalyptus-300">&</span> Teletrabajo
+        </a>
+        <div class="flex items-center gap-4 text-sm">
+          <a href="/blog/" class="hover:underline">Artículos</a>
+          <a href="/#categorias" class="hidden hover:underline sm:inline">Categorías</a>
+          <ThemeToggle />
+        </div>
+      </nav>
+    </header>
+
+    <main id="contenido" class="mx-auto w-full max-w-6xl px-4 py-10">
+      <slot />
+    </main>
+
+    <footer class="border-t border-eucalyptus-900/10 py-8 dark:border-white/10">
+      <div class="mx-auto max-w-6xl px-4 text-sm opacity-70">
+        <p>Contenido educativo, no sustituye consejo médico. Consulta a un profesional sanitario ante dolor persistente.</p>
+        <p class="mt-1">© {new Date().getFullYear()} Postura & Teletrabajo — Ergonomía, salud postural y prevención de RSI.</p>
+      </div>
+    </footer>
+  </body>
+</html>

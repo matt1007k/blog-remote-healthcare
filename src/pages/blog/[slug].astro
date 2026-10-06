@@ -1,0 +1,49 @@
+---
+/**
+ * /blog/[slug] — Detalle SSG.
+ * - getStaticPaths desde el repositorio (infraestructura).
+ * - Relacionados vía GetRelatedPostsUseCase (exactamente 2).
+ * - Comentarios vía adapter intercambiable.
+ */
+import { AstroContentBlogRepository } from '../../infrastructure/AstroContentBlogRepository';
+import { createCommentAdapter } from '../../infrastructure/CommentAdapters';
+import { getRelatedPostsUseCase } from '../../core/use-cases/GetRelatedPostsUseCase';
+import BlogPostLayout from '../../layouts/BlogPostLayout.astro';
+
+export async function getStaticPaths() {
+  const repo = new AstroContentBlogRepository();
+  const posts = await repo.getAllPosts();
+  return posts
+    .filter((p) => !p.draft)
+    .map((p) => ({ params: { slug: p.slug }, props: { slug: p.slug } }));
+}
+
+const { slug } = Astro.params as { slug: string };
+const { slug: slugFromProps } = Astro.props as { slug: string };
+const finalSlug: string = slug ?? slugFromProps;
+
+const repo = new AstroContentBlogRepository();
+const post = await repo.getPostBySlug(finalSlug);
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+
+const all = await repo.getAllPosts();
+if (!post) {
+  return Astro.redirect('/404');
+}
+const related = getRelatedPostsUseCase(post, all, 2);
+const commentAdapter = createCommentAdapter();
+
+// Render Markdown de la colección (fuera del dominio, en la capa de presentación)
+import { getCollection, render } from 'astro:content';
+const entries = await getCollection('blog');
+const entry = entries.find((e) => e.id.replace(/\.md$/, '') === finalSlug || e.id === finalSlug);
+if (!entry) return Astro.redirect('/404');
+const { Content } = await render(entry);
+---
+
+<BlogPostLayout post={post} related={related} commentAdapter={commentAdapter}>
+  <Content />
+</BlogPostLayout>

@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/* Tailwind v4 — dark mode por clase (toggle manual) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+
+  /* Eucalipto / Sage — calma clínica, salud postural */
+  --color-eucalyptus-50: #f2f7f4;
+  --color-eucalyptus-100: #e3efe8;
+  --color-eucalyptus-200: #c6dfd1;
+  --color-eucalyptus-300: #9fc6b2;
+  --color-eucalyptus-400: #74a78f;
+  --color-eucalyptus-500: #528a73;
+  --color-eucalyptus-600: #3f6f5d;
+  --color-eucalyptus-700: #345a4c;
+  --color-eucalyptus-800: #2d4a40;
+  --color-eucalyptus-900: #1a2e2a;
+  --color-eucalyptus-950: #0f1e1b;
+
+  /* Arena cálida — fondo confortable, no blanco quirúrgico */
+  --color-sand-50: #faf8f4;
+  --color-sand-100: #f7f3ec;
+  --color-sand-200: #ede4d3;
+  --color-sand-300: #ddcdae;
+
+  /* Arcilla — acento de acción / CTA (contraste AA sobre claro y oscuro) */
+  --color-clay-400: #d69363;
+  --color-clay-500: #c67c4e;
+  --color-clay-600: #a96438;
+
+  --color-ink-900: #16211f;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Prosa del artículo sin plugin typography: estilos mínimos y accesibles */
+.prose-ergo :where(h2, h3) {
+  font-family: var(--font-display);
+  scroll-margin-top: 6rem;
+  letter-spacing: -0.01em;
+}
+.prose-ergo :where(p, li) {
+  line-height: 1.75;
+}
+.prose-ergo :where(a) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Focus visible consistente (a11y) */
+:where(a, button, input, select):focus-visible {
+  outline: 3px solid var(--color-eucalyptus-400);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

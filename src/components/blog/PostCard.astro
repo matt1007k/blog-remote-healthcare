@@ -1,0 +1,52 @@
+---
+/**
+ * PostCard.astro — Presentación pura (server-rendered, Zero-JS).
+ * Recibe una entidad de dominio, no conoce el repositorio.
+ */
+import type { BlogPost } from '../../core/domain/entities';
+
+interface Props {
+  post: BlogPost;
+}
+
+const { post } = Astro.props as Props;
+const dateStr: string = post.pubDate.toLocaleDateString('es-ES', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+---
+
+<article
+  class="group flex h-full flex-col overflow-hidden rounded-2xl border border-eucalyptus-900/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-white/10 dark:bg-eucalyptus-950/60"
+  aria-labelledby={`post-${post.slug}`}
+>
+  <a href={`/blog/${post.slug}/`} class="flex h-full flex-col" aria-label={`Leer: ${post.title}`}>
+    <div class="h-1.5 w-full bg-gradient-to-r from-eucalyptus-500 via-eucalyptus-400 to-clay-400" aria-hidden="true"></div>
+    <div class="flex flex-1 flex-col gap-3 p-5">
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <span class="rounded-full bg-eucalyptus-100 px-2.5 py-1 font-semibold text-eucalyptus-800 dark:bg-eucalyptus-800 dark:text-eucalyptus-100">
+          {post.category}
+        </span>
+        <span class="rounded-full border border-eucalyptus-900/15 px-2.5 py-1 text-eucalyptus-800 dark:border-white/15 dark:text-eucalyptus-200">
+          {post.difficulty}
+        </span>
+      </div>
+      <h3 id={`post-${post.slug}`} class="font-display text-xl leading-snug text-ink-900 group-hover:underline dark:text-sand-50">
+        {post.title}
+      </h3>
+      <p class="line-clamp-2 text-sm leading-relaxed text-eucalyptus-900/70 dark:text-eucalyptus-100/70">
+        {post.description}
+      </p>
+      <div class="mt-auto flex items-center justify-between pt-3 text-xs text-eucalyptus-900/60 dark:text-eucalyptus-100/60">
+        <span><time datetime={post.pubDate.toISOString()}>{dateStr}</time> · {post.readingMinutes} min</span>
+        <span class="font-medium">Por {post.author.name}</span>
+      </div>
+      <div class="flex flex-wrap gap-1.5" aria-label="Etiquetas">
+        {post.tags.slice(0, 3).map((tag: string) => (
+          <span class="text-xs text-eucalyptus-700 dark:text-eucalyptus-300">#{tag}</span>
+        ))}
+      </div>
+    </div>
+  </a>
+</article>

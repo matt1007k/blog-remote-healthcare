@@ -1,0 +1,30 @@
+---
+/**
+ * /blog/ — Listado SSG + filtros en cliente (BlogExplorer).
+ * Lee query params iniciales (?categoria=, ?tag=) solo para preselección
+ * progresiva; el filtrado fuerte ocurre en el caso de uso si se usa SSR.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlogExplorer from '../../components/blog/BlogExplorer.astro';
+import { AstroContentBlogRepository } from '../../infrastructure/AstroContentBlogRepository';
+import { getPublishedPosts } from '../../core/use-cases/FilterPostsUseCase';
+import { POST_CATEGORIES } from '../../content.config';
+
+const repo = new AstroContentBlogRepository();
+const published = getPublishedPosts(await repo.getAllPosts());
+const tags = await repo.getAllTags();
+---
+
+<BaseLayout
+  title="Artículos — Postura & Teletrabajo"
+  description="Todos los artículos sobre ergonomía, salud postural, RSI y trabajo remoto. Filtra por categoría, tag o búsqueda."
+  canonicalPath="/blog/"
+>
+  <header class="max-w-2xl">
+    <h1 class="font-display text-4xl">Artículos</h1>
+    <p class="mt-2 opacity-70">Filtra por categoría, etiqueta o busca por síntoma, equipo o hábito. {published.length} guías publicadas.</p>
+  </header>
+  <div class="mt-8">
+    <BlogExplorer posts={published} categories={POST_CATEGORIES} tags={tags} />
+  </div>
+</BaseLayout>

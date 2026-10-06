@@ -1,0 +1,78 @@
+---
+/**
+ * Home — hero del nicho + destacados + acceso al explorador.
+ * SSG puro, Zero-JS salvo ThemeToggle.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/blog/PostCard.astro';
+import { AstroContentBlogRepository } from '../infrastructure/AstroContentBlogRepository';
+import { getPublishedPosts } from '../core/use-cases/FilterPostsUseCase';
+
+const repo = new AstroContentBlogRepository();
+const all = await repo.getAllPosts();
+const published = getPublishedPosts(all);
+const featured = published.filter((p) => p.featured).slice(0, 3);
+const latest = published.slice(0, 6);
+---
+
+<BaseLayout
+  title="Postura & Teletrabajo — Ergonomía, salud postural y prevención de RSI"
+  description="Guías prácticas de ergonomía profesional, salud postural en remoto y prevención de lesiones por esfuerzo repetitivo."
+  canonicalPath="/"
+>
+  <section aria-labelledby="hero" class="grid gap-8 rounded-3xl bg-gradient-to-br from-eucalyptus-800 to-eucalyptus-950 p-8 text-sand-50 sm:p-12 lg:grid-cols-2">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-widest text-eucalyptus-200">Ergonomía · Postura · RSI</p>
+      <h1 id="hero" class="font-display mt-3 text-4xl leading-tight sm:text-5xl">
+        Trabaja sin dolor: ergonomía real para el remoto.
+      </h1>
+      <p class="mt-4 max-w-md text-eucalyptus-100/90">
+        Pausas activas, ajuste de silla y monitor, rutinas anti-RSI. Ciencia aplicada, sin humo, en 5 minutos de lectura.
+      </p>
+      <div class="mt-6 flex gap-3">
+        <a href="/blog/" class="rounded-xl bg-clay-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-clay-600">Explorar artículos</a>
+        <a href="#categorias" class="rounded-xl border border-white/25 px-5 py-2.5 text-sm hover:bg-white/10">Ver categorías</a>
+      </div>
+    </div>
+    <div class="grid content-center gap-3 text-sm" aria-label="Principios del blog">
+      {[
+        ['🪑', 'Ajuste postural', 'Altura de silla, monitor a la altura de los ojos, pies apoyados.'],
+        ['⏱', 'Pausas activas', 'Regla 30/60: micro-pausas cada 30 min, pausa larga cada hora.'],
+        ['🤲', 'Prevención RSI', 'Muñeca neutra, fuerza mínima en teclado y ratón vertical si hay dolor.'],
+      ].map(([emoji, t, d]) => (
+        <div class="rounded-2xl bg-white/10 p-4 backdrop-blur">
+          <p class="font-semibold">{emoji} {t}</p>
+          <p class="mt-1 text-eucalyptus-100/80">{d}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section id="categorias" aria-labelledby="cat-h" class="mt-12">
+    <h2 id="cat-h" class="font-display text-2xl">Explora por categoría</h2>
+    <nav aria-label="Categorías" class="mt-4 flex flex-wrap gap-2">
+      {['ergonomia', 'salud-postural', 'rsi', 'trabajo-remoto', 'pausas-activas', 'equipamiento'].map((c) => (
+        <a href={`/blog/?categoria=${c}`} class="rounded-full border border-eucalyptus-900/15 px-4 py-1.5 text-sm hover:bg-eucalyptus-100 dark:border-white/15 dark:hover:bg-eucalyptus-800">{c}</a>
+      ))}
+    </nav>
+  </section>
+
+  {featured.length > 0 && (
+    <section aria-labelledby="feat-h" class="mt-12">
+      <h2 id="feat-h" class="font-display text-2xl">Destacados ✦</h2>
+      <div class="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {featured.map((p) => <PostCard post={p} />)}
+      </div>
+    </section>
+  )}
+
+  <section aria-labelledby="latest-h" class="mt-12">
+    <div class="flex items-end justify-between">
+      <h2 id="latest-h" class="font-display text-2xl">Lo último</h2>
+      <a href="/blog/" class="text-sm font-medium underline">Ver todo →</a>
+    </div>
+    <div class="mt-5 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {latest.map((p) => <PostCard post={p} />)}
+    </div>
+  </section>
+</BaseLayout>

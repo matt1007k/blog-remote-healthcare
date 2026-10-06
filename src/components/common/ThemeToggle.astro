@@ -1,0 +1,31 @@
+---
+/**
+ * ThemeToggle.astro — Isla mínima (vanilla) para modo oscuro/claro.
+ * Respeta prefers-color-scheme en primera carga (script inline en <head>).
+ */
+---
+
+<button
+  type="button"
+  data-theme-toggle
+  aria-label="Cambiar entre modo claro y oscuro"
+  class="rounded-xl border border-eucalyptus-900/15 px-3 py-1.5 text-sm font-medium hover:bg-eucalyptus-100 dark:border-white/15 dark:hover:bg-eucalyptus-800"
+>
+  <span data-theme-icon aria-hidden="true">🌙</span>
+  <span class="sr-only">Tema</span>
+</button>
+
+<script>
+  const btn = document.querySelector('[data-theme-toggle]');
+  const icon = document.querySelector('[data-theme-icon]');
+  const sync = () => {
+    const dark = document.documentElement.classList.contains('dark');
+    if (icon) icon.textContent = dark ? '☀️' : '🌙';
+  };
+  btn?.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    sync();
+  });
+  sync();
+</script>

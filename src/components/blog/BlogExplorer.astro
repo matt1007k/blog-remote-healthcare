@@ -1,0 +1,118 @@
+---
+/**
+ * BlogExplorer.astro — Lista + filtros (categoría, tag, búsqueda).
+ * SSG de la lista completa; filtrado en cliente con script vanilla
+ * (sin framework → isla de ~1KB, Zero-JS en el resto de la página).
+ * Incluye estado vacío accesible.
+ */
+import PostCard from './PostCard.astro';
+import type { BlogPost } from '../../core/domain/entities';
+import type { PostCategory } from '../../content.config';
+
+interface Props {
+  posts: readonly BlogPost[];
+  categories: readonly PostCategory[];
+  tags: readonly string[];
+}
+
+const { posts, categories, tags } = Astro.props as Props;
+---
+
+<section aria-label="Explorar artículos" data-blog-explorer>
+  <form
+    data-filter-form
+    class="grid gap-3 rounded-2xl border border-eucalyptus-900/10 bg-white/70 p-4 backdrop-blur sm:grid-cols-[1fr_auto_auto] sm:items-end dark:border-white/10 dark:bg-eucalyptus-950/60"
+    role="search"
+    onsubmit="return false;"
+  >
+    <div>
+      <label for="q" class="mb-1 block text-xs font-semibold uppercase tracking-wide">Buscar</label>
+      <input
+        id="q" name="q" type="search" data-filter-q autocomplete="off"
+        placeholder="Ej. túnel carpiano, silla, pausas…"
+        class="w-full rounded-xl border border-eucalyptus-900/15 bg-sand-50 px-3 py-2 text-sm dark:border-white/15 dark:bg-eucalyptus-900"
+      />
+    </div>
+    <div>
+      <label for="cat" class="mb-1 block text-xs font-semibold uppercase tracking-wide">Categoría</label>
+      <select id="cat" data-filter-cat class="rounded-xl border border-eucalyptus-900/15 bg-sand-50 px-3 py-2 text-sm dark:border-white/15 dark:bg-eucalyptus-900">
+        <option value="todas">Todas</option>
+        {categories.map((c: PostCategory) => <option value={c}>{c}</option>)}
+      </select>
+    </div>
+    <div>
+      <label for="tag" class="mb-1 block text-xs font-semibold uppercase tracking-wide">Tag</label>
+      <select id="tag" data-filter-tag class="rounded-xl border border-eucalyptus-900/15 bg-sand-50 px-3 py-2 text-sm dark:border-white/15 dark:bg-eucalyptus-900">
+        <option value="todos">Todos</option>
+        {tags.map((t: string) => <option value={t}>#{t}</option>)}
+      </select>
+    </div>
+  </form>
+
+  <p class="mt-4 text-sm text-eucalyptus-900/60 dark:text-eucalyptus-100/60" role="status" aria-live="polite">
+    <span data-result-count>{posts.length}</span> artículos
+  </p>
+
+  <div data-grid class="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {posts.map((post: BlogPost) => (
+      <div
+        data-card
+        data-title={post.title.toLowerCase()}
+        data-desc={post.description.toLowerCase()}
+        data-tags={post.tags.join(' ').toLowerCase()}
+        data-category={post.category}
+      >
+        <PostCard post={post} />
+      </div>
+    ))}
+  </div>
+
+  <div data-empty hidden class="mt-8 rounded-2xl border border-dashed border-eucalyptus-900/20 p-10 text-center dark:border-white/20">
+    <p class="font-display text-xl" role="alert">Sin coincidencias 🪑</p>
+    <p class="mt-2 text-sm opacity-70">Prueba con “pausas”, “muñeca” o cambia de categoría. Tu espalda te lo agradecerá igual.</p>
+    <button type="button" data-reset class="mt-4 rounded-xl bg-eucalyptus-700 px-4 py-2 text-sm font-semibold text-white hover:bg-eucalyptus-600">
+      Limpiar filtros
+    </button>
+  </div>
+</section>
+
+<script>
+  // Isla vanilla: filtra nodos ya renderizados (sin re-fetch, sin framework).
+  const root = document.querySelector('[data-blog-explorer]');
+  if (root instanceof HTMLElement) {
+    const q = root.querySelector('[data-filter-q]');
+    const cat = root.querySelector('[data-filter-cat]');
+    const tag = root.querySelector('[data-filter-tag]');
+    const cards = [...root.querySelectorAll('[data-card]')];
+    const empty = root.querySelector('[data-empty]');
+    const count = root.querySelector('[data-result-count]');
+    const reset = root.querySelector('[data-reset]');
+
+    const apply = () => {
+      const query = (q instanceof HTMLInputElement ? q.value : '').trim().toLowerCase();
+      const c = cat instanceof HTMLSelectElement ? cat.value : 'todas';
+      const t = tag instanceof HTMLSelectElement ? tag.value : 'todos';
+      let visible = 0;
+      for (const el of cards) {
+        if (!(el instanceof HTMLElement)) continue;
+        const hay = `${el.dataset.title ?? ''} ${el.dataset.desc ?? ''} ${el.dataset.tags ?? ''}`;
+        const okQ = !query || hay.includes(query);
+        const okC = c === 'todas' || el.dataset.category === c;
+        const okT = t === 'todos' || (el.dataset.tags ?? '').split(' ').includes(t.toLowerCase());
+        const show = okQ && okC && okT;
+        el.hidden = !show;
+        if (show) visible++;
+      }
+      if (empty instanceof HTMLElement) empty.hidden = visible !== 0;
+      if (count) count.textContent = String(visible);
+    };
+
+    for (const el of [q, cat, tag]) el?.addEventListener('input', apply);
+    reset?.addEventListener('click', () => {
+      if (q instanceof HTMLInputElement) q.value = '';
+      if (cat instanceof HTMLSelectElement) cat.value = 'todas';
+      if (tag instanceof HTMLSelectElement) tag.value = 'todos';
+      apply();
+    });
+  }
+</script>

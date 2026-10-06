@@ -1,0 +1,74 @@
+---
+/**
+ * Comments.astro — Isla optimizada para Core Web Vitals.
+ * - Server renderiza solo un placeholder + botón "Cargar comentarios".
+ * - Giscus se inyecta bajo demanda (click o IntersectionObserver),
+ *   nunca bloquea LCP. Adapter inyectable vía props.
+ */
+import type { ICommentAdapter } from '../../core/domain/repositories';
+
+interface Props {
+  adapter: ICommentAdapter;
+  term?: string;
+}
+
+const { adapter, term = 'Comentarios' } = Astro.props as Props;
+const isNoop: boolean = adapter.provider === 'noop';
+const cfg: Record<string, string> = isNoop ? {} : adapter.getConfig();
+---
+
+<section aria-labelledby="comments-heading" class="mt-14">
+  <h2 id="comments-heading" class="font-display text-2xl text-ink-900 dark:text-sand-50">
+    {term}
+  </h2>
+
+  {isNoop ? (
+    <p class="mt-2 text-sm opacity-70">
+      Comentarios desactivados en este entorno. Configura <code>PUBLIC_GISCUS_*</code> para activarlos con Giscus.
+    </p>
+  ) : (
+    <div data-comments-root data-cfg={JSON.stringify(cfg)} class="mt-4 rounded-2xl border border-eucalyptus-900/10 p-4 dark:border-white/10">
+      <button
+        type="button"
+        data-comments-load
+        class="rounded-xl bg-eucalyptus-700 px-4 py-2 text-sm font-semibold text-white hover:bg-eucalyptus-600"
+      >
+        Cargar comentarios
+      </button>
+      <p class="mt-2 text-xs opacity-60">Se cargan bajo demanda para no penalizar el rendimiento.</p>
+      <div data-comments-slot></div>
+    </div>
+    <script>
+      const root = document.querySelector('[data-comments-root]');
+      if (root instanceof HTMLElement) {
+        const slot = root.querySelector('[data-comments-slot]');
+        const btn = root.querySelector('[data-comments-load]');
+        const cfg = JSON.parse(root.dataset.cfg ?? '{}');
+        let loaded = false;
+        const load = () => {
+          if (loaded || !(slot instanceof HTMLElement)) return;
+          loaded = true;
+          const s = document.createElement('script');
+          s.src = 'https://giscus.app/client.js';
+          for (const [k, v] of Object.entries(cfg)) s.setAttribute(k.replace(/^data-/, 'data-'), String(v));
+          s.setAttribute('crossorigin', 'anonymous');
+          s.async = true;
+          // Tema adaptativo claro/oscuro
+          const dark = document.documentElement.classList.contains('dark');
+          s.setAttribute('data-theme', dark ? 'dark_dimmed' : 'light');
+          slot.appendChild(s);
+          if (btn instanceof HTMLElement) btn.hidden = true;
+        };
+        btn?.addEventListener('click', load, { once: true });
+        const io = new IntersectionObserver((entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            // Autocarga solo cuando el usuario hace scroll hasta aquí (sigue siendo lazy)
+            // load();
+            io.disconnect();
+          }
+        }, { rootMargin: '400px' });
+        io.observe(root);
+      }
+    </script>
+  )}
+</section>
